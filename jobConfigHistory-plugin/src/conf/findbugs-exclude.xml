@@ -1,0 +1,11 @@
+<FindBugsFilter>
+    <Match>
+        <Class name="~hudson\.plugins\.jobConfigHistory\..*Comparator"/>
+        <Bug code="SnVI"/>
+    </Match>
+    <!-- targetType is needed for unserialiazation only -->
+    <Match>
+        <Class name="~hudson\.plugins\.jobConfigHistory\.JobConfigBadgeAction"/>
+        <Bug code="UuF"/>
+    </Match>
+</FindBugsFilter>

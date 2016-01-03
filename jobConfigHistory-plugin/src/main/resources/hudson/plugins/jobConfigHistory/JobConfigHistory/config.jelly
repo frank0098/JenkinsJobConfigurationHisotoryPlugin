@@ -1,0 +1,50 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:section title="${%Job Config History}">
+
+	<f:entry title="${%Use different history directory than default}:" help="/plugin/jobConfigHistory/help/help-historyRootDir.html">
+ 		<f:textbox value="${it.historyRootDir}" name="historyRootDir"/>
+  	</f:entry>
+  	<f:entry title="${%SCM Repository URL}:" help="/plugin/jobConfigHistory/help/help-scmRepositoryURL.html">
+    	<f:textbox value="${it.scmRepoUrl}" name="scmRepoUrl"/>
+	</f:entry>
+	<f:entry title="${%SCM Repository Username}:" help="/plugin/jobConfigHistory/help/help-scmRepositoryUser.html">
+		<f:textbox value="${it.scmRepoUser}" name="scmRepoUser" />
+	</f:entry>
+	<f:entry title="${%SCM Repository Password}:" help="/plugin/jobConfigHistory/help/help-scmRepositoryPass.html">
+		<f:password value="${it.scmRepoPass}" name="scmRepoPass" />
+	</f:entry>
+    <f:advanced>
+      <f:entry title="${%Max number of history entries to keep}" help="/plugin/jobConfigHistory/help/help-maxHistoryEntries.html">
+        <f:textbox name="maxHistoryEntries" value="${it.maxHistoryEntries}"
+           checkUrl="'${rootURL}/plugin/jobConfigHistory/checkMaxHistoryEntries?value='+escape(this.value)"/>
+      </f:entry>
+      <f:entry title="${%Max number of days to keep history entries}" help="/plugin/jobConfigHistory/help/help-maxDaysToKeepEntries.html">
+        <f:textbox name="maxDaysToKeepEntries" value="${it.maxDaysToKeepEntries}"
+           checkUrl="'${rootURL}/plugin/jobConfigHistory/checkMaxDaysToKeepEntries?value='+escape(this.value)"/>
+      </f:entry>
+      <f:entry title="${%Max number of history entries to show per page}" help="/plugin/jobConfigHistory/help/help-maxEntriesPerPage.html">
+        <f:textbox name="maxEntriesPerPage" value="${it.maxEntriesPerPage}"
+           checkUrl="'${rootURL}/plugin/jobConfigHistory/checkMaxEntriesPerPage?value='+escape(this.value)"/>
+      </f:entry>
+      <f:entry title="${%System configuration exclude file pattern}" help="/plugin/jobConfigHistory/help/help-excludePattern.html">
+        <f:textbox name="excludePattern" value="${it.excludePattern}" default="${it.defaultExcludePattern}"
+           checkUrl="'${rootURL}/plugin/jobConfigHistory/checkExcludePattern?value='+escape(this.value)"/>
+      </f:entry>
+      <f:entry title="${%Do not save duplicate history}" help="/plugin/jobConfigHistory/help/help-skipDuplicateHistory.html">
+        <f:checkbox name="skipDuplicateHistory" checked="${it.skipDuplicateHistory}"/>
+      </f:entry>
+      <f:entry title="${%Save Maven module configuration changes}" help="/plugin/jobConfigHistory/help/help-saveModuleConfiguration.html">
+        <f:checkbox name="saveModuleConfiguration" checked="${it.saveModuleConfiguration}"/>
+      </f:entry>
+      <f:entry title="${%Show build badges}" help="/plugin/jobConfigHistory/help/help-showBuildBadges.html">
+        <f:radio name="showBuildBadges" title="${%Never}" value="never" checked="${it.getShowBuildBadges() == 'never'}"/>
+        <br />
+    	<f:radio name="showBuildBadges" title="${%Always}" value="always" checked="${it.getShowBuildBadges() == 'always'}"/>
+        <br />
+    	<f:radio name="showBuildBadges" title="${%Only for users with configuration permission}" value="userWithConfigPermission" checked="${it.getShowBuildBadges() == 'userWithConfigPermission'}"/>
+        <br />
+        <f:radio name="showBuildBadges" title="${%Only for administrators}" value="adminUser" checked="${it.getShowBuildBadges() == 'adminUser'}"/>
+      </f:entry>
+    </f:advanced>
+  </f:section>
+</j:jelly>

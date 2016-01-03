@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+  <l:layout title="${%All Configuration History}">
+    <l:side-panel>
+      <l:tasks>
+        <l:task icon="images/24x24/up.gif" href="${rootURL}/" title="${%Back to Dashboard}" />
+      	<l:task icon="plugin/jobConfigHistory/img/filter.png" href="?filter=system" title="${%Show system configs only}" />
+      	<l:task icon="plugin/jobConfigHistory/img/filter.png" href="?filter=jobs" title="${%Show job configs only}" />
+		<l:task icon="plugin/jobConfigHistory/img/filter.png" href="?filter=created" title="${%Show created jobs only}" />
+      	<l:task icon="plugin/jobConfigHistory/img/filter.png" href="?filter=deleted" title="${%Show deleted jobs only}" />
+      	<l:task icon="plugin/jobConfigHistory/img/all.png" href="?filter=all" title="${%Show all configs}" />
+      </l:tasks>
+ 	</l:side-panel>
+    
+    <l:main-panel>
+      <j:set var="filter" value="${request.getParameter('filter')}"/>
+      <j:choose>
+        <j:when test="${filter == 'all'}">
+          <h1>${%All Configuration History}</h1>
+        </j:when>
+        <j:when test="${filter == 'jobs'}">
+          <h1>${%Job Configuration History}</h1>
+        </j:when>
+        <j:when test="${filter == 'created'}">
+          <h1>${%Job Creation History}</h1>
+        </j:when>
+        <j:when test="${filter == 'deleted'}">
+          <h1>${%Job Deletion History}</h1>
+        </j:when>
+        <j:otherwise>
+		  <h1>${%System Configuration History}</h1>
+        </j:otherwise>
+      </j:choose>
+      
+      <a href="?filter=system">${%Show system configs only}</a> <br />
+      <a href="?filter=jobs">${%Show job configs only}</a> <br />
+      <a href="?filter=created">${%Show created jobs only}</a> <br />
+      <a href="?filter=deleted">${%Show deleted jobs only}</a> <br />
+      <a href="?filter=all">${%Show all configs}</a> <br />
+
+      <div>
+        <j:set var="configs" value="${it.getConfigs()}" />
+        <j:choose>
+          <j:when test="${!it.hasConfigurePermission() and (filter == 'system' || filter == null)}">
+            ${%No permission to view system changes}
+          </j:when>
+          <j:when test="${!it.hasJobConfigurePermission() and !it.hasReadExtensionPermission()}">
+            ${%No permission to view config history}
+          </j:when>
+          <j:when test="${configs.size() == 0}">
+            ${%No configuration history available}
+          </j:when>
+          <j:otherwise>
+            <div>
+              <table class="pane sortable" style="width:100%">
+                <tr>
+                  <td class="pane-header" initialSortDir="up" align="left">${%Date}</td>
+                  <j:choose>
+                    <j:when test="${filter == 'jobs' || filter == 'deleted' || filter == 'created'}">
+                      <td class="pane-header" align="left">${%Job configuration}</td>
+                    </j:when>
+                    <j:when test="${filter == 'all'}">
+                      <td class="pane-header" align="left">${%Job/System configuration}</td>
+                    </j:when>
+                    <j:otherwise>
+                      <td class="pane-header" align="left">${%System configuration}</td>
+                    </j:otherwise>
+                  </j:choose>
+                  <td class="pane-header" align="left">${%Operation}</td>
+                  <j:if test="${it.hasConfigurePermission() || it.hasJobConfigurePermission()}">
+                    <td class="pane-header" align="left">${%User}</td>
+                  </j:if>
+                  <td class="pane-header" align="left">${%File(raw)}</td>
+                  <j:if test="${filter == 'deleted'}">
+                    <td class="pane-header" align="left">${%Restore project}</td>
+                </j:if>
+              <td class = "pane-header" align = "left"> ${%Rollback}</td>
+              </tr>
+                <j:set var="configNr" value="0"/>
+                <j:forEach var="config" items="${configs}">
+                  <j:set var="configNr" value="${configNr + 1}"/>
+                  <tr>
+                    <td>${config.date}</td>
+                    <j:choose>
+                      <j:when test="${config.getIsJob()}">
+                        <!-- TODO besides clumsiness with folders, this fails to URL-escape characters in job names -->
+                        <!-- TODO check whether job has a JobConfigHistoryProjectAction before hyperlinking -->
+                        <td><a href="${rootURL}/job/${config.job.replace('/', '/job/')}/jobConfigHistory">${config.job.replace('/', ' » ')}</a></td>
+                      </j:when>
+                      <j:otherwise>
+                        <j:choose>
+                          <j:when test="${config.job.contains('_deleted_')}">
+                            <td><a href="history?name=${config.job}" id="deleted">${config.job}</a></td>
+                          </j:when>
+                          <j:otherwise>
+                            <td><a href="history?name=${config.job}">${config.job}</a>&amp;nbsp;(system)</td>
+                          </j:otherwise>
+                        </j:choose>
+                      </j:otherwise>
+                    </j:choose>
+                    <td>${config.operation}</td>
+                    <j:if test="${it.hasConfigurePermission() || it.hasJobConfigurePermission()}">
+                      <td><a href="${rootURL}/user/${config.userID}">${config.userID}</a></td>
+                    </j:if>
+                    <td>
+                      <!-- TODO check whether job has a JobConfigHistoryProjectAction before hyperlinking -->
+                      <a href="${it.createLinkToFiles(config,'xml')}">
+                        <img src="${imagesURL}/24x24/document.png" alt="" />${%View as XML}
+                      </a>
+                      <st:nbsp />
+                      <a href="${it.createLinkToFiles(config,'raw')}">
+                        (${%RAW})
+                      </a>
+                    </td>
+ <j:choose>
+                        <j:when test="${config.getIsJob()}">
+                                  <td>
+                  
+                                            <f:form action="rollback?timestamp=${config.date}&amp;name=${config.job}&amp;url=${rootURL}" name="rollback" method="post">
+                                                       <f:entry>
+                                                           <f:submit value="${%Yes}"/>
+                                                        </f:entry>
+                                                    </f:form>
+                                                  </td>
+                                                </j:when>
+                                              <j:otherwise>
+                                                      <td>
+                                                              ${%Cannot Rollback System Config}
+                                                            </td>
+                                                          </j:otherwise>
+                                                        </j:choose>
+                    
+                    
+                    <j:if test="${filter == 'deleted'}">
+                      <td>
+                        <j:if test="${it.getLastAvailableConfigXml(config.getJob()) != null}">
+                          <j:if test="${it.hasConfigurePermission() || it.hasJobConfigurePermission()}">
+                            <a id="restore" href="restoreQuestion?name=${config.getJob()}">
+							<img src="${resURL}/plugin/jobConfigHistory/img/restore.png" alt="${%Restore}" />
+						    </a>
+                          </j:if>
+						</j:if>
+                      </td>
+                    </j:if>
+                  </tr>
+                </j:forEach>
+              </table>
+            </div>
+          </j:otherwise>
+        </j:choose>
+    </div>
+    <f:entry title="${%Commit Message}" help="...">
+        <f:textbox id="cmsg-field" field="cmsg" />
+    </f:entry>
+    <f:entry title="${%Tags}" help="...">
+        <f:textbox id="ctags-field" field="ctags" />
+    </f:entry>
+    <a onclick="this.href='changeCommitMessage?cmsg='+document.getElementById('cmsg-field').value+'&amp;ctags='+document.getElementById('ctags-field').value;" href="changeCommitMessage?cmsg=lol&amp;tags=what">Submit</a>
+    </l:main-panel>
+  </l:layout>
+</j:jelly>

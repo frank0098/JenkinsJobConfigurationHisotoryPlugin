@@ -1,0 +1,114 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+  <l:layout title="Job Configuration History">
+    <st:include it="${it.project}" page="sidepanel.jelly" />
+    <l:main-panel>
+      <h1>${%Job Configuration History}</h1>
+      <h2>${it.getProject().getName()}</h2>
+      	  <f:form method="post" action="toggleSync" name="toggleSync">
+	  	<j:set var="sync" value="${it.getSyncStatusForProject(it.getProject().getName())}" />
+	    	<j:choose>
+	  		<j:when test="${sync}">
+	  			<h3>Project is synchronized with SCM</h3>
+	  		</j:when>
+	  		<j:when test="${!sync}">
+	  			<h3>Project is not synchronized with SCM</h3>
+          		<f:form action="sync" name="sync" method="post">
+                        <f:entry>
+                             <f:submit value="${%Sync}"/>
+                        </f:entry>
+                </f:form>
+	  		</j:when>
+	  	</j:choose>
+	  	<f:submit value="${%Toggle Sync}"/>
+      </f:form>
+      <div>
+        <j:set var="configs" value="${it.getJobConfigs()}" />
+        <j:choose>
+          <j:when test="${configs.size() == 0}">
+              ${%No job configuration history available}
+          </j:when>
+          <j:otherwise>
+            <br/>
+            <div>
+              <f:form method="post" action="diffFiles" name="diffFiles" enctype="multipart/form-data">
+	            <j:if test="${configs.size() > 1}">
+                  <div align="right">
+                    <f:submit value="${%Show Diffs}" />
+                  </div>
+      		    </j:if>
+                <st:adjunct includes="hudson.plugins.jobConfigHistory.table" />
+                <table id="confighistory" class="pane sortable">
+                  <tr>
+                    <td class="pane-header" initialSortDir="up" align="left">${%Date}</td>
+                    <td class="pane-header" align="left">${%Operation}</td>
+                    <j:if test="${it.hasConfigurePermission() || it.hasJobConfigurePermission()}">
+                      <td class="pane-header" align="left">${%User}</td>
+                    </j:if>
+                    <td class="pane-header" align="left">${%Show File}</td>
+                    <j:if test="${it.hasConfigurePermission() || it.hasJobConfigurePermission()}">
+                      <td class="pane-header" align="left">${%Restore old config}</td>
+                    </j:if>
+                    <td class="pane-header" align="center" style="border-left: solid 1px #bbb;">${%File A}</td>
+                    <td class="pane-header" align="center" style="border-left: solid 1px #bbb;">${%File B}</td>
+                  </tr>
+                  <j:set var="configNr" value="0"/>
+                  <j:forEach var="config" items="${configs}">
+                    <j:set var="configNr" value="${configNr + 1}"/>
+                    <tr>
+                      <td>${config.date}</td>
+                      <td>${config.operation}</td>
+                      <j:if test="${it.hasConfigurePermission() || it.hasJobConfigurePermission()}">
+                        <td><a href="${rootURL}/user/${config.userID}">${config.userID}</a></td>
+                      </j:if>
+                      <td>
+                        <j:set var="fileMissing" value="${!config.hasConfig()}"/>
+                        <j:if test="${!fileMissing}">
+                          <a href="configOutput?type=xml&amp;timestamp=${config.getDate()}">
+                            <img src="${imagesURL}/24x24/document.png" alt="" />${%View as XML}
+                          </a>
+                          <st:nbsp />
+                          <a href="configOutput?type=raw&amp;timestamp=${config.getDate()}">
+                            (${%RAW})
+                          </a>
+                        </j:if>
+                      </td>
+                      <j:if test="${it.hasConfigurePermission() || it.hasJobConfigurePermission()}">
+                          <td><j:if test="${configNr > 1 and !fileMissing}">
+                                <a id="restore${configNr}" href="restoreQuestion?timestamp=${config.getDate()}">
+                                    <img src="${resURL}/plugin/jobConfigHistory/img/restore.png" alt="${%Restore}" />
+                                </a>
+                              </j:if>
+                          </td>
+                      </j:if>
+                      <j:if test="${configNr == 2 and fileMissing}">
+                        <j:set var="offsetIfFileMissing" value="1"/>
+                      </j:if>
+                      <td align="center" style="border-left: solid 1px #bbb;">
+                        <j:if test="${!fileMissing}">
+                          <f:radio name="timestamp1" value="${config.getDate()}" checked="${configNr == (2 + offsetIfFileMissing) ? true:false}" />
+                        </j:if>
+                      </td>
+                      <td align="center" style="border-left: solid 1px #bbb;">
+                        <j:if test="${!fileMissing}">
+                          <f:radio name="timestamp2" value="${config.getDate()}" checked="${configNr == 1 ? true:false}" />
+                        </j:if>
+                      </td>
+                    </tr>
+                      <f:invisibleEntry>
+              	        <f:textbox name="name" value="${config.getJob()}" />
+                      </f:invisibleEntry>
+                  </j:forEach>
+                </table>
+	            <j:if test="${configs.size() > 1}">
+                  <div align="right">
+                    <f:submit value="${%Show Diffs}" />
+                  </div>
+      		    </j:if>
+              </f:form>
+            </div>
+          </j:otherwise>
+        </j:choose>
+      </div>
+    </l:main-panel>
+  </l:layout>
+</j:jelly>
